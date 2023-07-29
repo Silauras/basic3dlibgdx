@@ -13,6 +13,10 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.math.Vector3;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MyGdxGame extends ApplicationAdapter {
 
@@ -25,7 +29,7 @@ public class MyGdxGame extends ApplicationAdapter {
     public ModelBatch modelBatch;
     public ModelBatch shadowBatch;
     public Model model;
-    public ModelInstance instance;
+    public List<ModelInstance> instances = new ArrayList<>();
 
     @Override
     public void create() {
@@ -39,7 +43,7 @@ public class MyGdxGame extends ApplicationAdapter {
         modelBatch = new ModelBatch();
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
-        environment.add(new DirectionalLight().set(.8f, .8f, .8f, -1f, -.8f, -.2f));
+        environment.add(new DirectionalLight().set(Color.LIGHT_GRAY, new Vector3( 1f, -.8f, -.2f)));
         environment.add((shadowLight) =
                 new DirectionalShadowLight(
                         1024,
@@ -58,7 +62,12 @@ public class MyGdxGame extends ApplicationAdapter {
                 new Material(ColorAttribute.createDiffuse(Color.BLUE)),
                 VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 
-        instance = new ModelInstance(model);
+        instances.add(new ModelInstance(model));
+
+        instances.add(new ModelInstance(new ModelBuilder()
+                .createBox(100, 1, 100,
+                        new Material(ColorAttribute.createDiffuse(Color.BROWN)),
+                        VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal)));
     }
 
     private void createCamera() {
@@ -79,7 +88,7 @@ public class MyGdxGame extends ApplicationAdapter {
         shadowLight.begin();
         shadowBatch.begin(shadowLight.getCamera());
 
-        shadowBatch.render(instance);
+        shadowBatch.render(instances);
 
         shadowBatch.end();
         shadowLight.end();
@@ -90,7 +99,7 @@ public class MyGdxGame extends ApplicationAdapter {
         camController.update();
 
         modelBatch.begin(camera);
-        modelBatch.render(instance, environment);
+        modelBatch.render(instances, environment);
         modelBatch.end();
     }
 
