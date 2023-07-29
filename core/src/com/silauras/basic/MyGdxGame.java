@@ -9,32 +9,47 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 
 public class MyGdxGame extends ApplicationAdapter {
 
     public Environment environment;
+    public DirectionalShadowLight shadowLight;
 
     public PerspectiveCamera camera;
     public CameraInputController camController;
 
     public ModelBatch modelBatch;
+    public ModelBatch shadowBatch;
     public Model model;
     public ModelInstance instance;
 
     @Override
     public void create() {
         createEnvironment();
-        modelBatch = new ModelBatch();
+
         createCamera();
         createModel();
     }
 
     private void createEnvironment() {
+        modelBatch = new ModelBatch();
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
         environment.add(new DirectionalLight().set(.8f, .8f, .8f, -1f, -.8f, -.2f));
+        environment.add((shadowLight) =
+                new DirectionalShadowLight(
+                        1024,
+                        1024,
+                        60f,
+                        60f,
+                        .1f,
+                        50f));
+        environment.shadowMap = shadowLight;
+        shadowBatch = new ModelBatch(new DepthShaderProvider());
     }
 
     private void createModel() {
@@ -60,6 +75,15 @@ public class MyGdxGame extends ApplicationAdapter {
 
     @Override
     public void render() {
+        //create shadow texture
+        shadowLight.begin();
+        shadowBatch.begin(shadowLight.getCamera());
+
+        shadowBatch.render(instance);
+
+        shadowBatch.end();
+        shadowLight.end();
+
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
